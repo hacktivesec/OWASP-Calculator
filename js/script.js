@@ -164,7 +164,7 @@ function calculate() {
   dataset.push($("#nc").val());
   dataset.push($("#pv").val());
 
-  var LS = (LS / 8).toFixed(3);
+  LS = (LS / 8).toFixed(3);
 
   TIS = (TIS / 4).toFixed(3);
   BIS = (BIS / 4).toFixed(3);
@@ -227,21 +227,16 @@ function calculate() {
 
   //FINAL
   var RS = getCriticaly(FLS, TIS > BIS ? FTIS : FBIS);
-  console.log(RS);
+  $(".RS").text(((+LS + (TIS > BIS ? +TIS : +BIS)) / 2).toFixed(3) + " " + RS);
   if (RS == "LOW") {
-    $(".RS").text(RS);
     $(".RS").addClass("classLow");
   } else if (RS == "MEDIUM") {
-    $(".RS").text(RS);
     $(".RS").addClass("classMedium");
   } else if (RS == "HIGH") {
-    $(".RS").text(RS);
     $(".RS").addClass("classHigh");
   } else if (RS == "CRITICAL") {
-    $(".RS").text(RS);
     $(".RS").addClass("classCritical");
   } else {
-    $(".RS").text(RS);
     $(".RS").addClass("classNote");
   }
 
