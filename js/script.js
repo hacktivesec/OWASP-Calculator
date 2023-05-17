@@ -4,19 +4,19 @@
 var riskChart = document.getElementById("riskChart").getContext("2d");
 
 const colors = [
-  "rgba(255, 102, 255)",
-  "rgba(255, 0, 0)",
-  "rgba(255, 169, 0)",
-  "rgba(255, 255, 0)",
-  "rgba(144, 238, 144)",
+  "rgb(176, 0, 4)", // Critical
+  "rgb(230, 104, 38)", // High
+  "rgb(247, 181, 10)", // Medium
+  "rgb(46, 164, 63)", // Low
+  "rgb(49, 160, 236)", // Info
 ];
 
 const backgrounds = [
-  "rgba(255, 102, 255, 0.5)",
-  "rgba(255, 0, 0, 0.5)",
-  "rgba(255, 169, 0, 0.5)",
-  "rgba(255, 255, 0, 0.5)",
-  "rgba(144, 238, 144, 0.5)",
+  "rgba(176, 0, 4, 0.5)", // Critical
+  "rgba(230, 104, 38, 0.5)", // High
+  "rgba(247, 181, 10, 0.5)", // Medium
+  "rgba(46, 164, 63, 0.5)", // Low
+  "rgba(49, 160, 236, 0.5)", // Info
 ];
 
 const threats = [
@@ -64,7 +64,7 @@ const riskChartOptions = {
   },
   title: {
     display: false,
-    text: "Chart.js Radar Chart",
+    text: "OWASP Risk Matrix",
   },
   scale: {
     ticks: {
@@ -125,7 +125,8 @@ function loadVectors(vector) {
 
 function calculate() {
   var LS = 0;
-  var IS = 0;
+  var TIS = 0;
+  var BIS = 0;
   var dataset = [];
   var score = "";
   deleteClass();
@@ -151,16 +152,9 @@ function calculate() {
   dataset.push($("#id").val());
 
   // Get values TECHNICAL IMPACT FACTORS and BUSINESS IMPACT FACTORS
-  IS =
-    +$("#lc").val() +
-    +$("#li").val() +
-    +$("#lav").val() +
-    +$("#lac").val() +
-    +$("#fd").val() +
-    +$("#rd").val() +
-    +$("#nc").val() +
-    +$("#pv").val() +
-    0;
+  TIS = +$("#lc").val() + +$("#li").val() + +$("#lav").val() + +$("#lac").val();
+  BIS = +$("#fd").val() + +$("#rd").val() + +$("#nc").val() + +$("#pv").val();
+
   dataset.push($("#lc").val());
   dataset.push($("#li").val());
   dataset.push($("#lav").val());
@@ -171,13 +165,17 @@ function calculate() {
   dataset.push($("#pv").val());
 
   var LS = (LS / 8).toFixed(3);
-  var IS = (IS / 8).toFixed(3);
+
+  TIS = (TIS / 4).toFixed(3);
+  BIS = (BIS / 4).toFixed(3);
 
   var FLS = getRisk(LS);
-  var FIS = getRisk(IS);
+  var FTIS = getRisk(TIS);
+  var FBIS = getRisk(BIS);
 
   $(".LS").text(LS + " " + FLS);
-  $(".IS").text(IS + " " + FIS);
+  $(".TIS").text(TIS + " " + FTIS);
+  $(".BIS").text(BIS + " " + FBIS);
 
   score = "(";
   score = score + "SL:" + $("#sl").val() + "/";
@@ -203,28 +201,34 @@ function calculate() {
     "https://owasp.hacktivesecurity.com/?vector=" + score
   );
 
-  if (getRisk(LS) == "LOW") {
-    $(".LS").addClass("classNote");
-  } else if (getRisk(LS) == "MEDIUM") {
+  if (FLS == "LOW") {
+    $(".LS").addClass("classLow");
+  } else if (FLS == "MEDIUM") {
     $(".LS").addClass("classMedium");
   } else {
     $(".LS").addClass("classHigh");
   }
 
-  if (getRisk(IS) == "LOW") {
-    $(".IS").addClass("classNote");
-  } else if (getRisk(IS) == "MEDIUM") {
-    $(".IS").addClass("classMedium");
+  if (FTIS == "LOW") {
+    $(".TIS").addClass("classLow");
+  } else if (FTIS == "MEDIUM") {
+    $(".TIS").addClass("classMedium");
   } else {
-    $(".IS").addClass("classHigh");
+    $(".TIS").addClass("classHigh");
+  }
+
+  if (FBIS == "LOW") {
+    $(".BIS").addClass("classLow");
+  } else if (FBIS == "MEDIUM") {
+    $(".BIS").addClass("classMedium");
+  } else {
+    $(".BIS").addClass("classHigh");
   }
 
   //FINAL
-  var RS = getCriticaly(FLS, FIS);
-  if (RS == "NOTE") {
-    $(".RS").text(RS);
-    $(".RS").addClass("classNote");
-  } else if (RS == "LOW") {
+  var RS = getCriticaly(FLS, TIS > BIS ? FTIS : FBIS);
+  console.log(RS);
+  if (RS == "LOW") {
     $(".RS").text(RS);
     $(".RS").addClass("classLow");
   } else if (RS == "MEDIUM") {
@@ -245,7 +249,7 @@ function calculate() {
 }
 
 function getRisk(score) {
-  if (score == 0) return "NOTE";
+  if (score == 0) return "INFO";
   if (score < 3) return "LOW";
   if (score < 6) return "MEDIUM";
   if (score <= 9) return "HIGH";
@@ -253,8 +257,8 @@ function getRisk(score) {
 
 // Calculate final Risk Serverity
 function getCriticaly(L, I) {
-  //NOTE
-  if (L == "LOW" && I == "LOW") return "NOTE";
+  //INFO
+  if (L == "LOW" && I == "LOW") return "INFO";
 
   //LOW
   if (L == "LOW" && I == "MEDIUM") return "LOW";
@@ -276,14 +280,18 @@ function getCriticaly(L, I) {
 // Delete class before of calculate
 function deleteClass() {
   // Delete Class Likelihood Score
-  $(".LS").removeClass("classNote");
+  $(".LS").removeClass("classLow");
   $(".LS").removeClass("classMedium");
   $(".LS").removeClass("classHigh");
 
   // Delete Class Impact Score
-  $(".IS").removeClass("classNote");
-  $(".IS").removeClass("classMedium");
-  $(".IS").removeClass("classHigh");
+  $(".TIS").removeClass("classLow");
+  $(".TIS").removeClass("classMedium");
+  $(".TIS").removeClass("classHigh");
+
+  $(".BIS").removeClass("classLow");
+  $(".BIS").removeClass("classMedium");
+  $(".BIS").removeClass("classHigh");
 
   // Delete Class Risk Severity
   $(".RS").removeClass("classNote");
